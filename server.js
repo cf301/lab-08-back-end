@@ -37,25 +37,40 @@ app.get('/events', searchForEvents);
 app.use('*', (request, response) => {
   response.send('you got to the wrong place');
 })
-sqlQueryLocations = `SELECT * FROM locations WHERE search_query=$1`;
+
+const sqlLocationQuery = `SELECT * FROM locations WHERE search_query=$1`;
+const sqlLocationInsert = `INSERT INTO locations (
+  search_query,
+  formatted_query,
+  latitude,
+  longitude
+) VALUES ($1, $2, $3, $4)`;
+// const sqlLocationValues = [location.search_query, location.formatted_query, location.latitude, location.longitude];
 
 // Helper Functions
-function apiRequest(request, response, url, sqlQuery) {
+function locationHelper(request, result) {
+  return location = new Location(request.query.data, result); //create object
+}
+
+function locationValues(location) {
+  return [location.search_query, location.formatted_query, location.latitude, location.longitude];
+}
+
+// recordsExist, recordsDoNotExist
+function apiRequest(request, response, url, sqlQuery, sqlInsert) {
   client.query(sqlQuery, [request.query.data])
     .then(sqlResult => { //promise
       if (sqlResult.rowCount === 0 ){ //no data in DB
         console.log('getting new data from google API');
         superagent.get(url) //call api
           .then(result => { //promise
-            let location = new Location(request.query.data, result); //create object
+
+            //TODO: add flags for switch
+            let location = locationHelper(request, result);
+            let sqlLocationValues = locationValues(location);
             client.query(//insert into DB
-              `INSERT INTO locations (
-                search_query,
-                formatted_query,
-                latitude,
-                longitude
-              ) VALUES ($1, $2, $3, $4)`,
-              [location.search_query, location.formatted_query, location.latitude, location.longitude]//pass our values
+              sqlInsert,
+              sqlLocationValues //pass our values
             )
             response.send(location); //send to user
 
@@ -72,37 +87,12 @@ function apiRequest(request, response, url, sqlQuery) {
 
 function searchToLatLong(request, response) {
   const locationName = request.query.data;
-
+  // const sqlLocationValues = [location.search_query, location.formatted_query, location.latitude, location.longitude];
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
 
   //check if anything exists in our database for that locationName
-  client.query(`SELECT * FROM locations WHERE search_query=$1`, [locationName])
-    .then(sqlResult => { //promise
-      if (sqlResult.rowCount === 0 ){ //no data in DB
-        console.log('getting new data from google API');
-        superagent.get(url) //call api
-          .then(result => { //promise
-            let location = new Location(locationName, result); //create object
-            client.query(//insert into DB
-              `INSERT INTO locations (
-                search_query,
-                formatted_query,
-                latitude,
-                longitude
-              ) VALUES ($1, $2, $3, $4)`,
-              [location.search_query, location.formatted_query, location.latitude, location.longitude]//pass our values
-            )
-            response.send(location); //send to user
-
-          }).catch(e => { //catch errors
-            console.error(e);
-            response.status(500).send('Status 500: So sorry I broke trying to get location.');
-          })
-      } else { //we have data in DB
-        console.log('sending data from DB');
-        response.send(sqlResult.rows[0]); // send from DB.
-      }
-    })//end then
+  // , sqlLocationValues
+  apiRequest(request, response, url, sqlLocationQuery, sqlLocationInsert);
 }//end function
 
 

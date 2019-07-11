@@ -40,17 +40,41 @@ app.use('*', (request, response) => {
 
 // Helper Functions
 function searchToLatLong(request, response) {
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${request.query.data}&key=${process.env.GEOCODE_API_KEY}`;
-  superagent.get(url)
-    .then(result => {
-      const location = new Location(request.query.data, result);
-      response.send(location);
-    })
-    .catch(e => {
-      console.error(e);
-      response.status(500).send('Status 500: So sorry I broke trying to get location.');
-    })
-}
+  const locationName = request.query.data;
+
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
+
+  //check if anything exists in our database for that locationName
+  client.query(`SELECT * FROM locations WHERE search_query=$1`, [locationName])
+    .then(sqlResult => { //promise
+      if (sqlResult.rowCount === 0 ){ //no data in DB
+        console.log('getting new data from google API');
+        superagent.get(url) //call api
+          .then(result => { //promise
+            let location = new Location(locationName, result);  //create object
+            client.query(//insert into DB
+              `INSERT INTO locations (
+                search_query,
+                formatted_query,
+                latitude,
+                longtitude
+              ) VALUES ($1, $2, $3, $4)`,
+              [location.search_query, location.formatted_query, location.latitude, location.longitude]//pass our values
+            )
+            response.send(location); //send to user
+
+          }).catch(e => { //catch errors
+            console.error(e);
+            response.status(500).send('Status 500: So sorry I broke trying to get location.');
+          })
+      } else { //we have data in DB
+        console.log('sending data from DB');
+        response.send(sqlResult.rows[0]); // send from DB.
+      }
+    })//end then
+}//end function
+
+
 
 // Refactor the searchToLatLong function to replace the object literal with a call to this constructor function:
 function Location(query, result) {

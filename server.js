@@ -51,13 +51,13 @@ function searchToLatLong(request, response) {
         console.log('getting new data from google API');
         superagent.get(url) //call api
           .then(result => { //promise
-            let location = new Location(locationName, result);  //create object
+            let location = new Location(locationName, result); //create object
             client.query(//insert into DB
               `INSERT INTO locations (
                 search_query,
                 formatted_query,
                 latitude,
-                longtitude
+                longitude
               ) VALUES ($1, $2, $3, $4)`,
               [location.search_query, location.formatted_query, location.latitude, location.longitude]//pass our values
             )

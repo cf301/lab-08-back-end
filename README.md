@@ -1,6 +1,6 @@
 # lab-06-back-end
 
-**Author**: Nhu Trinh
+**Author**: Peter Lee & Jack Kinne
 **Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)
 
 ## Overview
@@ -80,8 +80,31 @@ Finish time: 12:50am
 
 Actual time needed to complete: 1 hour
 
+<!-- ------------- -->
+Number and name of feature: database
+
+Estimate of time needed to complete: 1 hour
+
+Start time: 9:30am
+
+Finish time: 10:30am
+
+Actual time needed to complete: 1 hour
+
+<!-- ------------- -->
+Number and name of feature: Server
+
+Estimate of time needed to complete: 1.5 hour
+
+Start time: 10:30am
+
+Finish time: 
+
+Actual time needed to complete: 
+
 ## Credits and Collaborations
 Nicholas Paro - https://github.com/paronicholas
 Padmapriya Ganapathi - https://github.com/gpadmapriya
 Peter Lee - https://github.com/leepj85
+Brandon Hurrington, Chris Coulon, Steve Grant, Joachen Busch
 
